@@ -10,9 +10,16 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#0b1c11;font-family:system-ui,"Noto Sans JP",sans-serif}
 .viewport{position:relative;width:100vw;height:100vh;overflow:hidden}
-.world{position:absolute;left:50%;top:50%;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(var(--zoom));transform-origin:center;transition:transform .65s cubic-bezier(.22,.65,.2,1)}
+.world{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(var(--zoom));
+  transform-origin:center;
+  transition:transform .65s cubic-bezier(.22,.65,.2,1);
+}
 
-/* FIXED: Maze now matches the 1024×1536 (2:3) image exactly */
+/* Maze locked to 1024×1536 (2:3) image */
 #maze{
   position:relative;
   width:min(100vw, calc(100vh * (2/3)));
@@ -139,11 +146,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1c11;font-family:
 .modal.show{display:flex}
 .card{
   --glow:#9ad;
+  position:relative;
   width:min(760px,92vw);
   background:#0f1836;
   border:1px solid #ffffff26;
   border-radius:18px;
-  padding:22px;
+  padding:22px 24px 20px;
   color:#fff;
   text-align:center;
   transform:scale(.92);
@@ -198,6 +206,22 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1c11;font-family:
   font-size:.95rem
 }
 
+/* Close (x) button inside card */
+.close-btn{
+  position:absolute;
+  top:8px;
+  right:10px;
+  border:none;
+  background:transparent;
+  color:#ffffffcc;
+  font-size:18px;
+  cursor:pointer;
+  padding:4px 6px;
+}
+.close-btn:hover{
+  color:#fff;
+}
+
 /* Buttons */
 .tools{
   position:fixed;
@@ -214,7 +238,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1c11;font-family:
   border:1px solid #ffffff26;
   background:#203a27;
   color:#e5edff;
-  cursor:pointer
+  cursor:pointer;
+  font-size:13px;
 }
 .btn:hover{background:#25452f}
 </style>
@@ -232,11 +257,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1c11;font-family:
   <button class="btn" id="test">TEST</button>
   <button class="btn" id="next">Next ▶︎</button>
   <button class="btn" id="reset">Reset</button>
+  <button class="btn" id="coords">Coords</button>
 </div>
 
 <!-- Modal window -->
 <div class="modal" id="modal">
   <div class="card" id="card">
+    <button class="close-btn" id="close-modal" aria-label="Close">✕</button>
     <div class="title-en" id="title-en">January — Week 1</div>
     <div class="title-jp" id="title-jp">1月　第1週</div>
     <div class="placeholders">
@@ -276,6 +303,8 @@ const titleJP=document.getElementById('title-jp');
 const testBtn=document.getElementById('test');
 const nextBtn=document.getElementById('next');
 const resetBtn=document.getElementById('reset');
+const coordsBtn=document.getElementById('coords');
+const closeModalBtn=document.getElementById('close-modal');
 
 const bgm=new Audio('audio/sneaky.mp3');bgm.loop=true;
 const sfxCheckpoint=new Audio('audio/checkpoint.mp3');
@@ -450,13 +479,31 @@ function poofAtStart(){
   },400);
 }
 
-/* NEW: realign Booha to the current checkpoint when the window is resized */
+/* snap Booha back to current checkpoint when resized */
 function realignBoohaToCurrent(){
-  if(currentIndex<0)return; // not on a checkpoint yet
+  if(currentIndex<0)return;
   const rect=maze.getBoundingClientRect();
   const {x,y}=stopPx(currentIndex,rect);
   placeBoohaXY(x,y);
 }
+
+/* Coordinate helper mode */
+let coordMode=false;
+coordsBtn.onclick=()=>{
+  coordMode=!coordMode;
+  coordsBtn.textContent=coordMode?'Coords ★':'Coords';
+};
+
+maze.addEventListener('click',(e)=>{
+  if(!coordMode)return;
+  const rect=maze.getBoundingClientRect();
+  const xPct=((e.clientX-rect.left)/rect.width)*100;
+  const yPct=((e.clientY-rect.top)/rect.height)*100;
+  const msg=`{"x":${xPct.toFixed(2)},"y":${yPct.toFixed(2)}}`;
+  console.log(msg);
+  alert(msg); // quick copy reference
+  e.stopPropagation();
+});
 
 /* Event wiring */
 testBtn.onclick=()=>{
@@ -470,6 +517,10 @@ nextBtn.onclick=goNext;
 resetBtn.onclick=()=>{
   currentIndex=-1;
   booha.style.opacity=0;
+  closeWindow();
+};
+closeModalBtn.onclick=(e)=>{
+  e.stopPropagation();
   closeWindow();
 };
 
