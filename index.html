@@ -11,94 +11,261 @@
 html,body{width:100%;height:100%;overflow:hidden;background:#0b1c11;font-family:system-ui,"Noto Sans JP",sans-serif}
 .viewport{position:relative;width:100vw;height:100vh;overflow:hidden}
 .world{position:absolute;left:50%;top:50%;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(var(--zoom));transform-origin:center;transition:transform .65s cubic-bezier(.22,.65,.2,1)}
-#maze{width:100vw;height:100vh;background:url('assets/maze.png') center/contain no-repeat}
+
+/* FIXED: Maze now matches the 1024×1536 (2:3) image exactly */
+#maze{
+  position:relative;
+  width:min(100vw, calc(100vh * (2/3)));
+  aspect-ratio:2 / 3;
+  background:url('assets/maze.png') center / 100% 100% no-repeat;
+}
 
 /* Booha */
-#booha{position:absolute;width:68px;height:68px;transform:translate(-50%,-50%) scale(1);
- z-index:12;pointer-events:none;opacity:0;
- filter:drop-shadow(0 0 10px #ffe17a) drop-shadow(0 4px 18px #000a);}
-@keyframes bob{0%,100%{transform:translate(-50%,-50%) translateY(0)}50%{transform:translate(-50%,-50%) translateY(-6px)}}
+#booha{
+  position:absolute;
+  width:68px;
+  height:68px;
+  transform:translate(-50%,-50%) scale(1);
+  z-index:12;
+  pointer-events:none;
+  opacity:0;
+  filter:drop-shadow(0 0 10px #ffe17a) drop-shadow(0 4px 18px #000a);
+}
+@keyframes bob{
+  0%,100%{transform:translate(-50%,-50%) translateY(0)}
+  50%{transform:translate(-50%,-50%) translateY(-6px)}
+}
 .bobbing{animation:bob 3.6s ease-in-out infinite}
-@keyframes glowPulse{0%{filter:drop-shadow(0 0 2px #fff6) drop-shadow(0 0 6px #ffd86d);}50%{filter:drop-shadow(0 0 14px #fff) drop-shadow(0 0 28px #ffd86d);}100%{filter:drop-shadow(0 0 10px #ffe17a) drop-shadow(0 4px 18px #000a);}}
+@keyframes glowPulse{
+  0%{filter:drop-shadow(0 0 2px #fff6) drop-shadow(0 0 6px #ffd86d);}
+  50%{filter:drop-shadow(0 0 14px #fff) drop-shadow(0 0 28px #ffd86d);}
+  100%{filter:drop-shadow(0 0 10px #ffe17a) drop-shadow(0 4px 18px #000a);}
+}
 
 /* Poof smoke */
-.smoke{position:absolute;width:160px;height:160px;left:0;top:0;transform:translate(-50%,-50%) scale(.5);pointer-events:none;z-index:10;
-background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.9)0%,rgba(255,255,255,.5)30%,rgba(255,255,255,0)70%);
-animation:poof 1.2s ease-out forwards;}
-@keyframes poof{0%{opacity:1;transform:translate(-50%,-50%) scale(.5);}60%{opacity:.6;transform:translate(-50%,-50%) scale(2);}100%{opacity:0;transform:translate(-50%,-50%) scale(3);}}
+.smoke{
+  position:absolute;
+  width:160px;
+  height:160px;
+  left:0;
+  top:0;
+  transform:translate(-50%,-50%) scale(.5);
+  pointer-events:none;
+  z-index:10;
+  background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.9)0%,rgba(255,255,255,.5)30%,rgba(255,255,255,0)70%);
+  animation:poof 1.2s ease-out forwards;
+}
+@keyframes poof{
+  0%{opacity:1;transform:translate(-50%,-50%) scale(.5);}
+  60%{opacity:.6;transform:translate(-50%,-50%) scale(2);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(3);}
+}
 
 /* Gold glitter trail */
-.spark{position:absolute;width:4.4px;height:4.4px;border-radius:50%;pointer-events:none;
-background:radial-gradient(circle at 40% 40%,#fff,#ffd86d 60%,transparent 80%);
-box-shadow:0 0 6px #fff6cc,0 0 12px #ffd86d,0 0 20px #ffec9c;opacity:.97;
-animation:spark 1s ease-out forwards;}
-@keyframes spark{0%{transform:translate(0,0) scale(1);opacity:1}50%{opacity:.9}100%{transform:translate(0,12px) scale(.7);opacity:0}}
+.spark{
+  position:absolute;
+  width:4.4px;
+  height:4.4px;
+  border-radius:50%;
+  pointer-events:none;
+  background:radial-gradient(circle at 40% 40%,#fff,#ffd86d 60%,transparent 80%);
+  box-shadow:0 0 6px #fff6cc,0 0 12px #ffd86d,0 0 20px #ffec9c;
+  opacity:.97;
+  animation:spark 1s ease-out forwards;
+}
+@keyframes spark{
+  0%{transform:translate(0,0) scale(1);opacity:1}
+  50%{opacity:.9}
+  100%{transform:translate(0,12px) scale(.7);opacity:0}
+}
 
 /* Fairy glitter (month color) */
-.fairy{position:absolute;width:5px;height:5px;border-radius:50%;pointer-events:none;
-background:radial-gradient(circle,#fff 0%,currentColor 60%,transparent 80%);
-box-shadow:0 0 10px currentColor,0 0 24px currentColor,0 0 40px currentColor;
-opacity:.9;animation:drift var(--dur,5200ms) cubic-bezier(.2,.7,.1,1) forwards,twinkle .8s infinite alternate;
-z-index:20;}
-@keyframes drift{0%{transform:translate(-50%,-50%) scale(.9)}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.1);opacity:0}}
-@keyframes twinkle{0%{filter:brightness(1)}100%{filter:brightness(1.8)}}
+.fairy{
+  position:absolute;
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  pointer-events:none;
+  background:radial-gradient(circle,#fff 0%,currentColor 60%,transparent 80%);
+  box-shadow:0 0 10px currentColor,0 0 24px currentColor,0 0 40px currentColor;
+  opacity:.9;
+  animation:drift var(--dur,5200ms) cubic-bezier(.2,.7,.1,1) forwards,twinkle .8s infinite alternate;
+  z-index:20;
+}
+@keyframes drift{
+  0%{transform:translate(-50%,-50%) scale(.9)}
+  100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.1);opacity:0}
+}
+@keyframes twinkle{
+  0%{filter:brightness(1)}
+  100%{filter:brightness(1.8)}
+}
 
 /* Checkpoints */
-.stop{position:absolute;width:18px;height:18px;border-radius:50%;transform:translate(-50%,-50%);opacity:0;pointer-events:none;z-index:11}
-.stop.hidden{opacity:0;transform:translate(-50%,-50%) scale(.6)}
-.stop.seen{opacity:1;pointer-events:auto;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.4)}}
+.stop{
+  position:absolute;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  opacity:0;
+  pointer-events:none;
+  z-index:11;
+}
+.stop.hidden{
+  opacity:0;
+  transform:translate(-50%,-50%) scale(.6)
+}
+.stop.seen{
+  opacity:1;
+  pointer-events:auto;
+  animation:pulse 2s ease-in-out infinite
+}
+@keyframes pulse{
+  0%,100%{filter:brightness(1)}
+  50%{filter:brightness(1.4)}
+}
 
 /* Modal window */
-.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0008;z-index:120}
+.modal{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:#0008;
+  z-index:120;
+}
 .modal.show{display:flex}
-.card{--glow:#9ad;width:min(760px,92vw);background:#0f1836;border:1px solid #ffffff26;
-border-radius:18px;padding:22px;color:#fff;text-align:center;
-transform:scale(.92);opacity:0;animation:pop .45s cubic-bezier(.2,.8,.2,1) forwards,breathe 3.2s ease-in-out .45s infinite;
-box-shadow:0 0 0 1px #ffffff10 inset,0 0 18px var(--glow),0 0 38px var(--glow);}
-@keyframes pop{to{transform:scale(1);opacity:1}}
-@keyframes breathe{0%,100%{box-shadow:0 0 0 1px #ffffff10 inset,0 0 18px var(--glow),0 0 38px var(--glow)}50%{box-shadow:0 0 0 1px #ffffff10 inset,0 0 28px var(--glow),0 0 58px var(--glow)}}
-.card .title-en{font-family:"Cinzel",serif;font-weight:900;font-size:clamp(22px,3.2vw,30px);text-shadow:0 0 14px var(--glow),0 0 28px var(--glow)}
-.card .title-jp{font-family:"Noto Sans JP",sans-serif;margin-top:6px;font-weight:700;opacity:.9}
-.placeholders{display:flex;gap:16px;justify-content:center;margin-top:18px}
-.box{width:180px;height:120px;border-radius:16px;background:linear-gradient(145deg,#0e1531,#121e45);
-border:1px solid #ffffff22;box-shadow:0 0 18px var(--glow),inset 0 0 0 1px #ffffff10;
-display:grid;place-items:center;font-family:"Cinzel",serif;font-weight:700;}
-.card .hint{opacity:.8;margin-top:12px;font-size:.95rem}
+.card{
+  --glow:#9ad;
+  width:min(760px,92vw);
+  background:#0f1836;
+  border:1px solid #ffffff26;
+  border-radius:18px;
+  padding:22px;
+  color:#fff;
+  text-align:center;
+  transform:scale(.92);
+  opacity:0;
+  animation:pop .45s cubic-bezier(.2,.8,.2,1) forwards,breathe 3.2s ease-in-out .45s infinite;
+  box-shadow:0 0 0 1px #ffffff10 inset,0 0 18px var(--glow),0 0 38px var(--glow);
+}
+@keyframes pop{
+  to{transform:scale(1);opacity:1}
+}
+@keyframes breathe{
+  0%,100%{
+    box-shadow:0 0 0 1px #ffffff10 inset,0 0 18px var(--glow),0 0 38px var(--glow)
+  }
+  50%{
+    box-shadow:0 0 0 1px #ffffff10 inset,0 0 28px var(--glow),0 0 58px var(--glow)
+  }
+}
+.card .title-en{
+  font-family:"Cinzel",serif;
+  font-weight:900;
+  font-size:clamp(22px,3.2vw,30px);
+  text-shadow:0 0 14px var(--glow),0 0 28px var(--glow)
+}
+.card .title-jp{
+  font-family:"Noto Sans JP",sans-serif;
+  margin-top:6px;
+  font-weight:700;
+  opacity:.9
+}
+.placeholders{
+  display:flex;
+  gap:16px;
+  justify-content:center;
+  margin-top:18px
+}
+.box{
+  width:180px;
+  height:120px;
+  border-radius:16px;
+  background:linear-gradient(145deg,#0e1531,#121e45);
+  border:1px solid #ffffff22;
+  box-shadow:0 0 18px var(--glow),inset 0 0 0 1px #ffffff10;
+  display:grid;
+  place-items:center;
+  font-family:"Cinzel",serif;
+  font-weight:700;
+}
+.card .hint{
+  opacity:.8;
+  margin-top:12px;
+  font-size:.95rem
+}
 
 /* Buttons */
-.tools{position:fixed;left:12px;bottom:12px;display:flex;gap:8px;z-index:200}
-.btn{padding:10px 14px;font-weight:700;border-radius:12px;border:1px solid #ffffff26;background:#203a27;color:#e5edff;cursor:pointer}
+.tools{
+  position:fixed;
+  left:12px;
+  bottom:12px;
+  display:flex;
+  gap:8px;
+  z-index:200
+}
+.btn{
+  padding:10px 14px;
+  font-weight:700;
+  border-radius:12px;
+  border:1px solid #ffffff26;
+  background:#203a27;
+  color:#e5edff;
+  cursor:pointer
+}
 .btn:hover{background:#25452f}
 </style>
 </head>
 <body>
-<div class="viewport" id="viewport"><div class="world" id="world"><div id="maze"></div></div></div>
+<div class="viewport" id="viewport">
+  <div class="world" id="world">
+    <div id="maze"></div>
+  </div>
+</div>
+
 <img id="booha" src="assets/mazebooha.png" alt="booha"/>
+
 <div class="tools">
- <button class="btn" id="test">TEST</button>
- <button class="btn" id="next">Next ▶︎</button>
- <button class="btn" id="reset">Reset</button>
+  <button class="btn" id="test">TEST</button>
+  <button class="btn" id="next">Next ▶︎</button>
+  <button class="btn" id="reset">Reset</button>
 </div>
 
 <!-- Modal window -->
 <div class="modal" id="modal">
- <div class="card" id="card">
-  <div class="title-en" id="title-en">January — Week 1</div>
-  <div class="title-jp" id="title-jp">1月　第1週</div>
-  <div class="placeholders">
-   <div class="box">Deck 1</div>
-   <div class="box">Deck 2</div>
+  <div class="card" id="card">
+    <div class="title-en" id="title-en">January — Week 1</div>
+    <div class="title-jp" id="title-jp">1月　第1週</div>
+    <div class="placeholders">
+      <div class="box">Deck 1</div>
+      <div class="box">Deck 2</div>
+    </div>
+    <div class="hint">Tap <b>Next</b> to continue your adventure.</div>
   </div>
-  <div class="hint">Tap <b>Next</b> to continue your adventure.</div>
- </div>
 </div>
 
 <script>
 const MONTHS_EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTHS_JP=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 const MONTH_COLORS=['#cddfff','#ffb6c1','#ffda8a','#a7f5b1','#7fdfff','#ffe066','#ff9edb','#f8b54c','#d6b3ff','#ff9851','#ffd6a1','#fff4c7'];
-const POS=[{"x":36.94,"y":4.85},{"x":32.14,"y":55.21},{"x":72.12,"y":69.2},{"x":53.92,"y":13.34},{"x":24.14,"y":82.86},{"x":63.67,"y":32.74},{"x":32.22,"y":26.27},{"x":65.27,"y":83.02},{"x":54.38,"y":59.66},{"x":70.22,"y":24.33},{"x":45.39,"y":13.58},{"x":22.77,"y":63.78},{"x":45.62,"y":41.47},{"x":40.14,"y":73.89},{"x":37.55,"y":13.26},{"x":71.67,"y":59.74},{"x":44.71,"y":26.35},{"x":32.22,"y":82.54},{"x":54.15,"y":22.88},{"x":24.68,"y":89.33},{"x":63.59,"y":41.63},{"x":64.51,"y":23.44},{"x":44.33,"y":55.21},{"x":71.21,"y":79.22},{"x":31.91,"y":37.91},{"x":59.1,"y":94.02},{"x":69.54,"y":50.53},{"x":33.28,"y":89.65},{"x":70.98,"y":35.41},{"x":22.92,"y":73.65},{"x":55.67,"y":51.01},{"x":37.32,"y":25.71},{"x":55.98,"y":73.89},{"x":54.91,"y":31.85},{"x":56.21,"y":82.54},{"x":31.68,"y":45.68},{"x":64.36,"y":59.18},{"x":39.22,"y":63.3},{"x":70.91,"y":42.36},{"x":32.75,"y":63.78},{"x":48.97,"y":63.78},{"x":43.03,"y":94.18},{"x":70.75,"y":30.07},{"x":61.08,"y":46.97},{"x":44.33,"y":82.46},{"x":53.47,"y":41.96},{"x":37.32,"y":19.73},{"x":65.73,"y":96.2}];
+
+const POS=[
+  {"x":36.94,"y":4.85},{"x":32.14,"y":55.21},{"x":72.12,"y":69.2},{"x":53.92,"y":13.34},
+  {"x":24.14,"y":82.86},{"x":63.67,"y":32.74},{"x":32.22,"y":26.27},{"x":65.27,"y":83.02},
+  {"x":54.38,"y":59.66},{"x":70.22,"y":24.33},{"x":45.39,"y":13.58},{"x":22.77,"y":63.78},
+  {"x":45.62,"y":41.47},{"x":40.14,"y":73.89},{"x":37.55,"y":13.26},{"x":71.67,"y":59.74},
+  {"x":44.71,"y":26.35},{"x":32.22,"y":82.54},{"x":54.15,"y":22.88},{"x":24.68,"y":89.33},
+  {"x":63.59,"y":41.63},{"x":64.51,"y":23.44},{"x":44.33,"y":55.21},{"x":71.21,"y":79.22},
+  {"x":31.91,"y":37.91},{"x":59.1,"y":94.02},{"x":69.54,"y":50.53},{"x":33.28,"y":89.65},
+  {"x":70.98,"y":35.41},{"x":22.92,"y":73.65},{"x":55.67,"y":51.01},{"x":37.32,"y":25.71},
+  {"x":55.98,"y":73.89},{"x":54.91,"y":31.85},{"x":56.21,"y":82.54},{"x":31.68,"y":45.68},
+  {"x":64.36,"y":59.18},{"x":39.22,"y":63.3},{"x":70.91,"y":42.36},{"x":32.75,"y":63.78},
+  {"x":48.97,"y":63.78},{"x":43.03,"y":94.18},{"x":70.75,"y":30.07},{"x":61.08,"y":46.97},
+  {"x":44.33,"y":82.46},{"x":53.47,"y":41.96},{"x":37.32,"y":19.73},{"x":65.73,"y":96.2}
+];
 
 const maze=document.getElementById('maze');
 const booha=document.getElementById('booha');
@@ -113,46 +280,209 @@ const resetBtn=document.getElementById('reset');
 const bgm=new Audio('audio/sneaky.mp3');bgm.loop=true;
 const sfxCheckpoint=new Audio('audio/checkpoint.mp3');
 let audioPrimed=false;
-function primeAudio(){if(audioPrimed)return;audioPrimed=true;bgm.currentTime=0;bgm.play().catch(()=>{});}
+function primeAudio(){
+  if(audioPrimed)return;
+  audioPrimed=true;
+  bgm.currentTime=0;
+  bgm.play().catch(()=>{});
+}
 
 let currentIndex=-1,moving=false;
 const stops=[];
-POS.forEach((p,i)=>{const el=document.createElement('div');el.className='stop hidden';el.style.left=p.x+'%';el.style.top=p.y+'%';maze.appendChild(el);stops.push({el,i});});
+POS.forEach((p,i)=>{
+  const el=document.createElement('div');
+  el.className='stop hidden';
+  el.style.left=p.x+'%';
+  el.style.top=p.y+'%';
+  maze.appendChild(el);
+  stops.push({el,i});
+});
 
 function monthColor(i){return MONTH_COLORS[Math.floor(i/4)];}
-function placeBoohaXY(x,y){booha.style.left=x+'px';booha.style.top=y+'px';}
-function startPosition(){const r=maze.getBoundingClientRect();return{x:r.left+window.scrollX+r.width*0.065,y:r.top+window.scrollY+r.height*0.085};}
-function stopPx(i,rect){const n=POS[i];return{x:rect.left+(n.x/100)*rect.width+window.scrollX,y:rect.top+(n.y/100)*rect.height+window.scrollY};}
-function easeInOutCubic(t){return t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
-function spawnSpark(x,y){const s=document.createElement('i');s.className='spark';s.style.left=x+'px';s.style.top=y+'px';document.body.appendChild(s);setTimeout(()=>s.remove(),1000);}
-function fairyBurst(i){const color=monthColor(i);const rect=maze.getBoundingClientRect();const {x:cx,y:cy}=stopPx(i,rect);const count=200,radiusMin=40,radiusMax=260;
-for(let n=0;n<count;n++){const a=Math.random()*Math.PI*2;const len=radiusMin+Math.pow(Math.random(),.5)*(radiusMax-radiusMin);const dx=Math.cos(a)*len,dy=Math.sin(a)*len;const tw=document.createElement('i');tw.className='fairy';tw.style.color=color;tw.style.left=cx+'px';tw.style.top=cy+'px';tw.style.setProperty('--dx',dx+'px');tw.style.setProperty('--dy',dy+'px');tw.style.setProperty('--dur',(4000+Math.random()*3500)+'ms');tw.style.animationDelay=(Math.random()*200)+'ms';document.body.appendChild(tw);setTimeout(()=>tw.remove(),7800);}}
-function showCheckpoint(i){const color=monthColor(i);const el=stops[i].el;el.classList.remove('hidden');el.classList.add('seen');
-el.style.background=`radial-gradient(circle,${color} 0%,${color} 60%,#0000 100%)`;
-el.style.boxShadow=`0 0 0 2px #0008 inset,0 0 18px ${color},0 0 38px ${color}`;}
-function moveBoohaToXY(ex,ey){return new Promise(resolve=>{moving=true;const rect=maze.getBoundingClientRect();
-const sx=parseFloat(booha.style.left)|| (rect.left+window.scrollX);const sy=parseFloat(booha.style.top)|| (rect.top +window.scrollY);
-const dx=ex-sx,dy=ey-sy;const dist=Math.hypot(dx,dy);const dur=Math.max(5200,Math.min(14000,dist*6.5));const t0=performance.now();
-function step(t){const k=Math.min(1,(t-t0)/dur);const e=easeInOutCubic(k);const x=sx+dx*e,y=sy+dy*e;placeBoohaXY(x,y);
-for(let n=0;n<2;n++){if(Math.random()<.9)spawnSpark(x+(Math.random()*4-2),y+(Math.random()*4-2));}
-if(k<1)requestAnimationFrame(step);else{placeBoohaXY(ex,ey);moving=false;resolve();}}requestAnimationFrame(step);});}
-function moveBooha(i){const rect=maze.getBoundingClientRect();const {x,y}=stopPx(i,rect);return moveBoohaToXY(x,y);}
-async function playCheckpoint(){try{sfxCheckpoint.currentTime=0;await sfxCheckpoint.play();}catch(e){}await new Promise(r=>setTimeout(r,4000));}
-function setWindowTitles(i){const m=Math.floor(i/4),w=(i%4)+1;const color=monthColor(i);titleEN.textContent=`${MONTHS_EN[m]} — Week ${w}`;titleJP.textContent=`${MONTHS_JP[m]}　第${w}週`;card.style.setProperty('--glow',color);}
-function openWindow(){modal.classList.add('show');card.style.animation='none';void card.offsetWidth;card.style.animation=null;}
-function closeWindow(){modal.classList.remove('show');}
-async function arriveAt(i){await playCheckpoint();fairyBurst(i);
-setTimeout(()=>showCheckpoint(i),2000);
-setTimeout(()=>{setWindowTitles(i);openWindow();},2000);}
-async function goNext(){primeAudio();if(moving)return;closeWindow();
-let next=currentIndex+1;if(next>=POS.length)next=0;
-await moveBooha(next);currentIndex=next;await arriveAt(currentIndex);}
-function poofAtStart(){const pos=startPosition();const smoke=document.createElement('div');smoke.className='smoke';smoke.style.left=pos.x+'px';smoke.style.top=pos.y+'px';
-document.body.appendChild(smoke);setTimeout(()=>smoke.remove(),1200);
-booha.style.left=pos.x+'px';booha.style.top=pos.y+'px';booha.style.animation='glowPulse 2s ease-out';setTimeout(()=>{booha.style.opacity=1;booha.classList.add('bobbing');},400);}
-testBtn.onclick=()=>{primeAudio();currentIndex=-1;booha.style.opacity=0;poofAtStart();setTimeout(()=>goNext(),1300);}
-nextBtn.onclick=goNext;resetBtn.onclick=()=>{currentIndex=-1;booha.style.opacity=0;closeWindow();}
-window.onload=()=>{const pos=startPosition();placeBoohaXY(pos.x,pos.y);}
+function placeBoohaXY(x,y){
+  booha.style.left=x+'px';
+  booha.style.top=y+'px';
+}
+function startPosition(){
+  const r=maze.getBoundingClientRect();
+  return{
+    x:r.left+window.scrollX+r.width*0.065,
+    y:r.top+window.scrollY+r.height*0.085
+  };
+}
+function stopPx(i,rect){
+  const n=POS[i];
+  return{
+    x:rect.left+(n.x/100)*rect.width+window.scrollX,
+    y:rect.top+(n.y/100)*rect.height+window.scrollY
+  };
+}
+function easeInOutCubic(t){
+  return t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+}
+function spawnSpark(x,y){
+  const s=document.createElement('i');
+  s.className='spark';
+  s.style.left=x+'px';
+  s.style.top=y+'px';
+  document.body.appendChild(s);
+  setTimeout(()=>s.remove(),1000);
+}
+function fairyBurst(i){
+  const color=monthColor(i);
+  const rect=maze.getBoundingClientRect();
+  const {x:cx,y:cy}=stopPx(i,rect);
+  const count=200,radiusMin=40,radiusMax=260;
+  for(let n=0;n<count;n++){
+    const a=Math.random()*Math.PI*2;
+    const len=radiusMin+Math.pow(Math.random(),.5)*(radiusMax-radiusMin);
+    const dx=Math.cos(a)*len,dy=Math.sin(a)*len;
+    const tw=document.createElement('i');
+    tw.className='fairy';
+    tw.style.color=color;
+    tw.style.left=cx+'px';
+    tw.style.top=cy+'px';
+    tw.style.setProperty('--dx',dx+'px');
+    tw.style.setProperty('--dy',dy+'px');
+    tw.style.setProperty('--dur',(4000+Math.random()*3500)+'ms');
+    tw.style.animationDelay=(Math.random()*200)+'ms';
+    document.body.appendChild(tw);
+    setTimeout(()=>tw.remove(),7800);
+  }
+}
+function showCheckpoint(i){
+  const color=monthColor(i);
+  const el=stops[i].el;
+  el.classList.remove('hidden');
+  el.classList.add('seen');
+  el.style.background=`radial-gradient(circle,${color} 0%,${color} 60%,#0000 100%)`;
+  el.style.boxShadow=`0 0 0 2px #0008 inset,0 0 18px ${color},0 0 38px ${color}`;
+}
+function moveBoohaToXY(ex,ey){
+  return new Promise(resolve=>{
+    moving=true;
+    const rect=maze.getBoundingClientRect();
+    const sx=parseFloat(booha.style.left) || (rect.left+window.scrollX);
+    const sy=parseFloat(booha.style.top) || (rect.top+window.scrollY);
+    const dx=ex-sx,dy=ey-sy;
+    const dist=Math.hypot(dx,dy);
+    const dur=Math.max(5200,Math.min(14000,dist*6.5));
+    const t0=performance.now();
+    function step(t){
+      const k=Math.min(1,(t-t0)/dur);
+      const e=easeInOutCubic(k);
+      const x=sx+dx*e,y=sy+dy*e;
+      placeBoohaXY(x,y);
+      for(let n=0;n<2;n++){
+        if(Math.random()<.9)spawnSpark(x+(Math.random()*4-2),y+(Math.random()*4-2));
+      }
+      if(k<1)requestAnimationFrame(step);
+      else{
+        placeBoohaXY(ex,ey);
+        moving=false;
+        resolve();
+      }
+    }
+    requestAnimationFrame(step);
+  });
+}
+function moveBooha(i){
+  const rect=maze.getBoundingClientRect();
+  const {x,y}=stopPx(i,rect);
+  return moveBoohaToXY(x,y);
+}
+async function playCheckpoint(){
+  try{
+    sfxCheckpoint.currentTime=0;
+    await sfxCheckpoint.play();
+  }catch(e){}
+  await new Promise(r=>setTimeout(r,4000));
+}
+function setWindowTitles(i){
+  const m=Math.floor(i/4),w=(i%4)+1;
+  const color=monthColor(i);
+  titleEN.textContent=`${MONTHS_EN[m]} — Week ${w}`;
+  titleJP.textContent=`${MONTHS_JP[m]}　第${w}週`;
+  card.style.setProperty('--glow',color);
+}
+function openWindow(){
+  modal.classList.add('show');
+  card.style.animation='none';
+  void card.offsetWidth;
+  card.style.animation=null;
+}
+function closeWindow(){
+  modal.classList.remove('show');
+}
+async function arriveAt(i){
+  await playCheckpoint();
+  fairyBurst(i);
+  setTimeout(()=>showCheckpoint(i),2000);
+  setTimeout(()=>{
+    setWindowTitles(i);
+    openWindow();
+  },2000);
+}
+async function goNext(){
+  primeAudio();
+  if(moving)return;
+  closeWindow();
+  let next=currentIndex+1;
+  if(next>=POS.length)next=0;
+  await moveBooha(next);
+  currentIndex=next;
+  await arriveAt(currentIndex);
+}
+function poofAtStart(){
+  const pos=startPosition();
+  const smoke=document.createElement('div');
+  smoke.className='smoke';
+  smoke.style.left=pos.x+'px';
+  smoke.style.top=pos.y+'px';
+  document.body.appendChild(smoke);
+  setTimeout(()=>smoke.remove(),1200);
+  booha.style.left=pos.x+'px';
+  booha.style.top=pos.y+'px';
+  booha.style.animation='glowPulse 2s ease-out';
+  setTimeout(()=>{
+    booha.style.opacity=1;
+    booha.classList.add('bobbing');
+  },400);
+}
+
+/* NEW: realign Booha to the current checkpoint when the window is resized */
+function realignBoohaToCurrent(){
+  if(currentIndex<0)return; // not on a checkpoint yet
+  const rect=maze.getBoundingClientRect();
+  const {x,y}=stopPx(currentIndex,rect);
+  placeBoohaXY(x,y);
+}
+
+/* Event wiring */
+testBtn.onclick=()=>{
+  primeAudio();
+  currentIndex=-1;
+  booha.style.opacity=0;
+  poofAtStart();
+  setTimeout(()=>goNext(),1300);
+};
+nextBtn.onclick=goNext;
+resetBtn.onclick=()=>{
+  currentIndex=-1;
+  booha.style.opacity=0;
+  closeWindow();
+};
+
+/* Initial position */
+window.onload=()=>{
+  const pos=startPosition();
+  placeBoohaXY(pos.x,pos.y);
+};
+
+/* Re-snap Booha when the layout changes on resize */
+window.addEventListener('resize',()=>{
+  requestAnimationFrame(realignBoohaToCurrent);
+});
 </script>
 </body>
 </html>
