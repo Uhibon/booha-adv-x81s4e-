@@ -251,7 +251,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1c11;font-family:
   </div>
 </div>
 
-<img id="booha" src="assets/mazebooha.png" alt="booha"/>
+<!-- Updated ghost image -->
+<img id="booha" src="assets/BoohaYellow.png" alt="booha"/>
 
 <div class="tools">
   <button class="btn" id="test">TEST</button>
@@ -341,7 +342,6 @@ const POS = [
   /* 48 */ {"x":74.70,"y":94.92},
 ];
 
-  
 const maze=document.getElementById('maze');
 const booha=document.getElementById('booha');
 const modal=document.getElementById('modal');
@@ -371,6 +371,14 @@ POS.forEach((p,i)=>{
   el.className='stop hidden';
   el.style.left=p.x+'%';
   el.style.top=p.y+'%';
+
+  // Make stop points clickable to open the weekly menu (only when "seen")
+  el.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    if(!el.classList.contains('seen')) return;
+    onStopClick(i);
+  });
+
   maze.appendChild(el);
   stops.push({el,i});
 });
@@ -421,10 +429,11 @@ function fairyBurst(i){
     tw.style.top=cy+'px';
     tw.style.setProperty('--dx',dx+'px');
     tw.style.setProperty('--dy',dy+'px');
-    tw.style.setProperty('--dur',(4000+Math.random()*3500)+'ms');
-    tw.style.animationDelay=(Math.random()*200)+'ms';
+    // Faster burst duration + slightly shorter lifetime
+    tw.style.setProperty('--dur',(2600+Math.random()*2200)+'ms');
+    tw.style.animationDelay=(Math.random()*120)+'ms';
     document.body.appendChild(tw);
-    setTimeout(()=>tw.remove(),7800);
+    setTimeout(()=>tw.remove(),5200);
   }
 }
 function showCheckpoint(i){
@@ -500,6 +509,26 @@ async function arriveAt(i){
     openWindow();
   },2000);
 }
+
+// Clicking a seen stop → move (if needed) and open that week's menu
+async function onStopClick(i){
+  primeAudio();
+  if(moving)return;
+  closeWindow();
+
+  const rect=maze.getBoundingClientRect();
+  const {x,y}=stopPx(i,rect);
+
+  // Only animate if Booha is not already at this stop
+  if(currentIndex!==i){
+    await moveBoohaToXY(x,y);
+    currentIndex=i;
+  }
+
+  setWindowTitles(i);
+  openWindow();
+}
+
 async function goNext(){
   primeAudio();
   if(moving)return;
