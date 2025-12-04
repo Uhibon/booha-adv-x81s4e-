@@ -8,8 +8,19 @@
 <style>
 :root{--zoom:1;--tx:0px;--ty:0px;}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;background:#0b1c11;font-family:system-ui,"Noto Sans JP",sans-serif}
-.viewport{position:relative;width:100vw;height:100vh;overflow:hidden}
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#0b1c11;
+  font-family:system-ui,"Noto Sans JP",sans-serif;
+}
+.viewport{
+  position:relative;
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+}
 .world{
   position:absolute;
   left:50%;
@@ -25,6 +36,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1c11;font-family:
   width:min(100vw, calc(100vh * (2/3)));
   aspect-ratio:2 / 3;
   background:url('assets/maze.png') center / 100% 100% no-repeat;
+  margin:0 auto;
+  touch-action:none; /* prevent weird scroll on mobile while tapping */
 }
 
 /* Booha */
@@ -235,7 +248,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1c11;font-family:
   bottom:12px;
   display:flex;
   gap:8px;
-  z-index:200
+  z-index:200;
 }
 .btn{
   padding:10px 14px;
@@ -258,6 +271,24 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1c11;font-family:
 }
 .start-btn{
   padding:10px 18px;
+}
+
+/* Mobile tweaks */
+@media (max-width:768px){
+  .btn{
+    padding:11px 16px;
+    font-size:14px;
+  }
+  .tools{
+    gap:6px;
+  }
+  #booha{
+    width:60px;
+    height:60px;
+  }
+  .card{
+    padding:18px 16px 18px;
+  }
 }
 </style>
 </head>
@@ -300,7 +331,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1c11;font-family:
 const MONTHS_EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTHS_JP=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 
-// 🔥 New, bolder month colors (much more distinct)
+// Bolder, clearly distinct month colors
 const MONTH_COLORS=[
   '#38BDF8', // Jan - icy blue
   '#FB7185', // Feb - hot pink
@@ -514,7 +545,7 @@ function spawnSpark(x,y){
   setTimeout(()=>s.remove(),1000);
 }
 
-// ✨ Faster, snappier fairy burst — and we’ll call it only for *new* weeks
+// Faster, snappier fairy burst – called only for *new* weeks
 function fairyBurst(i){
   const color=monthColor(i);
   const rect=maze.getBoundingClientRect();
@@ -625,7 +656,7 @@ function closeWindow(){
   modal.classList.remove('show');
 }
 
-// 🧨 arriveAt: sound + glitter ONLY on first visit, faster explosion
+// arriveAt: sound + glitter ONLY on first visit
 async function arriveAt(i){
   const isNew=!visited[i];
 
@@ -635,13 +666,11 @@ async function arriveAt(i){
     visited[i]=true;
     saveVisited();
 
-    // Let the celebration play, then show the card
     setTimeout(()=>{
       setWindowTitles(i);
       openWindow();
     },2000);
   }else{
-    // Returning to an already-cleared week: no explosion, no sound, just open
     setWindowTitles(i);
     openWindow();
   }
@@ -719,7 +748,7 @@ maze.addEventListener('click',(e)=>{
   if(!coordMode)return;
   const rect=maze.getBoundingClientRect();
   const xPct=((e.clientX-rect.left)/rect.width)*100;
-  const yPct=((e.clientX-rect.left)/rect.width)*100;
+  const yPct=((e.clientY-rect.top)/rect.height)*100;
   const msg=`{"x":${xPct.toFixed(2)},"y":${yPct.toFixed(2)}}`;
   console.log(msg);
   alert(msg); // quick copy reference
