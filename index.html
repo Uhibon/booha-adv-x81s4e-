@@ -123,10 +123,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1c11;font-family:
   opacity:0;
   transform:translate(-50%,-50%) scale(.6)
 }
-.stop.seen{
+.stop.active{
   opacity:1;
   pointer-events:auto;
-  animation:pulse 2s ease-in-out infinite
+  animation:pulse 2s ease-in-out infinite;
+}
+.stop.old{
+  opacity:1;
+  pointer-events:none;
+  background:#000;
+  box-shadow:0 0 0 2px #ffdf80,0 0 10px #ffdf80,0 0 24px #ffdf80;
 }
 @keyframes pulse{
   0%,100%{filter:brightness(1)}
@@ -242,9 +248,24 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b1c11;font-family:
   font-size:13px;
 }
 .btn:hover{background:#25452f}
+
+/* Start button (top-left) */
+.start-wrap{
+  position:fixed;
+  top:12px;
+  left:12px;
+  z-index:210;
+}
+.start-btn{
+  padding:10px 18px;
+}
 </style>
 </head>
 <body>
+<div class="start-wrap">
+  <button class="btn start-btn" id="start">Start</button>
+</div>
+
 <div class="viewport" id="viewport">
   <div class="world" id="world">
     <div id="maze"></div>
@@ -353,10 +374,32 @@ const nextBtn=document.getElementById('next');
 const resetBtn=document.getElementById('reset');
 const coordsBtn=document.getElementById('coords');
 const closeModalBtn=document.getElementById('close-modal');
+const startBtn=document.getElementById('start');
 
 const bgm=new Audio('audio/sneaky.mp3');bgm.loop=true;
 const sfxCheckpoint=new Audio('audio/checkpoint.mp3');
 let audioPrimed=false;
+let gameStarted=false;
+
+// one-time-per-checkpoint tracking (per browser)
+const VISITED_KEY='boohaMazeVisitedStops';
+let visited=new Array(POS.length).fill(false);
+try{
+  const stored=localStorage.getItem(VISITED_KEY);
+  if(stored){
+    const parsed=JSON.parse(stored);
+    if(Array.isArray(parsed)&&parsed.length===POS.length){
+      visited=parsed;
+    }
+  }
+}catch(e){}
+
+function saveVisited(){
+  try{
+    localStorage.setItem(VISITED_KEY,JSON.stringify(visited));
+  }catch(e){}
+}
+
 function primeAudio(){
   if(audioPrimed)return;
   audioPrimed=true;
@@ -364,7 +407,49 @@ function primeAudio(){
   bgm.play().catch(()=>{});
 }
 
-let currentIndex=-1,moving=false;
+/* calendar / window logic */
+let todayIndex=0;
+let WINDOW_START=0,WINDOW_END=0;
+
+function getCurrentIndexFromDate(){
+  const now=new Date();
+  const year=now.getFullYear();
+  let month=now.getMonth(); // 0-11
+
+  // First day of month
+  const firstOfMonth=new Date(year,month,1);
+  const day=firstOfMonth.getDay(); // 0=Sun,1=Mon,...
+  const firstMonday=new Date(firstOfMonth);
+  const offset=(1-day+7)%7; // days from firstOfMonth to first Monday
+  firstMonday.setDate(1+offset);
+
+  let week=1;
+  if(now<firstMonday){
+    week=1;
+  }else{
+    const diffMs=now-firstMonday;
+    const diffDays=Math.floor(diffMs/86400000);
+    week=1+Math.floor(diffDays/7);
+    if(week>4)week=4;
+  }
+
+  let idx=month*4+(week-1);
+  if(idx<0)idx=0;
+  if(idx>=POS.length)idx=POS.length-1;
+  return idx;
+}
+
+function updateWindowFromCurrentIndex(idx){
+  WINDOW_END=idx;
+  WINDOW_START=Math.max(0,WINDOW_END-3);
+}
+
+function getStopState(i){
+  if(i<WINDOW_START)return 'old';
+  if(i>WINDOW_END)return 'future';
+  return 'active';
+}
+
 const stops=[];
 POS.forEach((p,i)=>{
   const el=document.createElement('div');
@@ -372,10 +457,10 @@ POS.forEach((p,i)=>{
   el.style.left=p.x+'%';
   el.style.top=p.y+'%';
 
-  // Make stop points clickable to open the weekly menu (only when "seen")
+  // Make stop points clickable to open the weekly menu (only when active)
   el.addEventListener('click',(e)=>{
     e.stopPropagation();
-    if(!el.classList.contains('seen')) return;
+    if(!el.classList.contains('active')) return;
     onStopClick(i);
   });
 
@@ -429,21 +514,40 @@ function fairyBurst(i){
     tw.style.top=cy+'px';
     tw.style.setProperty('--dx',dx+'px');
     tw.style.setProperty('--dy',dy+'px');
-    // Faster burst duration + slightly shorter lifetime
     tw.style.setProperty('--dur',(2600+Math.random()*2200)+'ms');
     tw.style.animationDelay=(Math.random()*120)+'ms';
     document.body.appendChild(tw);
     setTimeout(()=>tw.remove(),5200);
   }
 }
+
 function showCheckpoint(i){
   const color=monthColor(i);
   const el=stops[i].el;
-  el.classList.remove('hidden');
-  el.classList.add('seen');
+  el.classList.remove('hidden','old');
+  el.classList.add('active');
   el.style.background=`radial-gradient(circle,${color} 0%,${color} 60%,#0000 100%)`;
   el.style.boxShadow=`0 0 0 2px #0008 inset,0 0 18px ${color},0 0 38px ${color}`;
 }
+
+/* apply old/active/future styles based on date window */
+function applyStopStates(){
+  stops.forEach(({el,i})=>{
+    const state=getStopState(i);
+    el.classList.remove('hidden','active','old');
+    if(state==='future'){
+      el.classList.add('hidden');
+    }else if(state==='old'){
+      el.classList.add('old');
+      // styles handled by CSS .stop.old
+    }else{
+      showCheckpoint(i);
+    }
+  });
+}
+
+let currentIndex=-1,moving=false;
+
 function moveBoohaToXY(ex,ey){
   return new Promise(resolve=>{
     moving=true;
@@ -477,6 +581,7 @@ function moveBooha(i){
   const {x,y}=stopPx(i,rect);
   return moveBoohaToXY(x,y);
 }
+
 async function playCheckpoint(){
   try{
     sfxCheckpoint.currentTime=0;
@@ -484,6 +589,7 @@ async function playCheckpoint(){
   }catch(e){}
   await new Promise(r=>setTimeout(r,4000));
 }
+
 function setWindowTitles(i){
   const m=Math.floor(i/4),w=(i%4)+1;
   const color=monthColor(i);
@@ -500,19 +606,25 @@ function openWindow(){
 function closeWindow(){
   modal.classList.remove('show');
 }
+
 async function arriveAt(i){
-  await playCheckpoint();
+  // Play checkpoint sound only once per checkpoint per browser
+  if(!visited[i]){
+    await playCheckpoint();
+    visited[i]=true;
+    saveVisited();
+  }
   fairyBurst(i);
-  setTimeout(()=>showCheckpoint(i),2000);
+  // titles + window after a short delay
   setTimeout(()=>{
     setWindowTitles(i);
     openWindow();
   },2000);
 }
 
-// Clicking a seen stop → move (if needed) and open that week's menu
+// Clicking an active stop → move (if needed) and open that week's menu
 async function onStopClick(i){
-  primeAudio();
+  if(!gameStarted)return;
   if(moving)return;
   closeWindow();
 
@@ -525,20 +637,32 @@ async function onStopClick(i){
     currentIndex=i;
   }
 
-  setWindowTitles(i);
-  openWindow();
+  if(!visited[i]){
+    await arriveAt(i);
+  }else{
+    setWindowTitles(i);
+    openWindow();
+  }
 }
 
 async function goNext(){
-  primeAudio();
+  if(!gameStarted)return;
   if(moving)return;
   closeWindow();
-  let next=currentIndex+1;
-  if(next>=POS.length)next=0;
+
+  let next;
+  if(currentIndex<WINDOW_START || currentIndex>WINDOW_END){
+    next=WINDOW_START;
+  }else{
+    next=currentIndex+1;
+    if(next>WINDOW_END)next=WINDOW_START;
+  }
+
   await moveBooha(next);
   currentIndex=next;
   await arriveAt(currentIndex);
 }
+
 function poofAtStart(){
   const pos=startPosition();
   const smoke=document.createElement('div');
@@ -584,6 +708,8 @@ maze.addEventListener('click',(e)=>{
 
 /* Event wiring */
 testBtn.onclick=()=>{
+  // Dev-only: quick way to jump in
+  gameStarted=true;
   primeAudio();
   currentIndex=-1;
   booha.style.opacity=0;
@@ -594,17 +720,44 @@ nextBtn.onclick=goNext;
 resetBtn.onclick=()=>{
   currentIndex=-1;
   booha.style.opacity=0;
+  booha.classList.remove('bobbing');
   closeWindow();
+  gameStarted=false;
+  audioPrimed=false;
+  try{bgm.pause();}catch(e){}
 };
 closeModalBtn.onclick=(e)=>{
   e.stopPropagation();
   closeWindow();
 };
 
-/* Initial position */
+/* Start button: begin BGM, poof Booha, move to current week */
+startBtn.onclick=()=>{
+  if(gameStarted)return;
+  gameStarted=true;
+  primeAudio();
+  closeWindow();
+  poofAtStart();
+
+  if(todayIndex<0 || todayIndex>=POS.length)return;
+  const rect=maze.getBoundingClientRect();
+  const {x,y}=stopPx(todayIndex,rect);
+
+  setTimeout(async ()=>{
+    await moveBoohaToXY(x,y);
+    currentIndex=todayIndex;
+    await arriveAt(currentIndex);
+  },1300);
+};
+
+/* Initial position + calendar window */
 window.onload=()=>{
   const pos=startPosition();
   placeBoohaXY(pos.x,pos.y);
+
+  todayIndex=getCurrentIndexFromDate();
+  updateWindowFromCurrentIndex(todayIndex);
+  applyStopStates();
 };
 
 /* Re-snap Booha when the layout changes on resize */
