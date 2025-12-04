@@ -11,15 +11,16 @@
 html,body{
   width:100%;
   height:100%;
-  overflow:hidden;
+  overflow-x:hidden;
+  overflow-y:auto;
   background:#0b1c11;
   font-family:system-ui,"Noto Sans JP",sans-serif;
 }
 .viewport{
   position:relative;
   width:100vw;
-  height:100vh;
-  overflow:hidden;
+  min-height:100vh;
+  overflow:visible;
 }
 .world{
   position:absolute;
@@ -37,7 +38,7 @@ html,body{
   aspect-ratio:2 / 3;
   background:url('assets/maze.png') center / 100% 100% no-repeat;
   margin:0 auto;
-  touch-action:none; /* prevent weird scroll on mobile while tapping */
+  touch-action:pan-y; /* allow vertical scroll on mobile */
 }
 
 /* Booha */
@@ -241,7 +242,7 @@ html,body{
   color:#fff;
 }
 
-/* Buttons */
+/* Bottom-left tools: now only RESET (TEST) */
 .tools{
   position:fixed;
   left:12px;
@@ -306,11 +307,9 @@ html,body{
 <!-- Updated ghost image -->
 <img id="booha" src="assets/BoohaYellow.png" alt="booha"/>
 
+<!-- TEMP DEV: Reset all checkpoints -->
 <div class="tools">
-  <button class="btn" id="test">TEST</button>
-  <button class="btn" id="next">Next ▶︎</button>
-  <button class="btn" id="reset">Reset</button>
-  <button class="btn" id="coords">Coords</button>
+  <button class="btn" id="resetTest">RESET (TEST)</button>
 </div>
 
 <!-- Modal window -->
@@ -415,12 +414,9 @@ const modal=document.getElementById('modal');
 const card=document.getElementById('card');
 const titleEN=document.getElementById('title-en');
 const titleJP=document.getElementById('title-jp');
-const testBtn=document.getElementById('test');
-const nextBtn=document.getElementById('next');
-const resetBtn=document.getElementById('reset');
-const coordsBtn=document.getElementById('coords');
 const closeModalBtn=document.getElementById('close-modal');
 const startBtn=document.getElementById('start');
+const resetTestBtn=document.getElementById('resetTest');
 
 const bgm=new Audio('audio/sneaky.mp3');bgm.loop=true;
 const sfxCheckpoint=new Audio('audio/checkpoint.mp3');
@@ -737,44 +733,16 @@ function realignBoohaToCurrent(){
   placeBoohaXY(x,y);
 }
 
-/* Coordinate helper mode */
-let coordMode=false;
-coordsBtn.onclick=()=>{
-  coordMode=!coordMode;
-  coordsBtn.textContent=coordMode?'Coords ★':'Coords';
-};
-
-maze.addEventListener('click',(e)=>{
-  if(!coordMode)return;
-  const rect=maze.getBoundingClientRect();
-  const xPct=((e.clientX-rect.left)/rect.width)*100;
-  const yPct=((e.clientY-rect.top)/rect.height)*100;
-  const msg=`{"x":${xPct.toFixed(2)},"y":${yPct.toFixed(2)}}`;
-  console.log(msg);
-  alert(msg); // quick copy reference
-  e.stopPropagation();
-});
-
 /* Event wiring */
-testBtn.onclick=()=>{
-  // Dev-only: quick way to jump in
-  gameStarted=true;
-  primeAudio();
-  currentIndex=-1;
-  booha.style.opacity=0;
-  poofAtStart();
-  setTimeout(()=>goNext(),1300);
+
+// TEMP DEV: reset all visited checkpoints for testing
+resetTestBtn.onclick=()=>{
+  try{
+    localStorage.removeItem(VISITED_KEY);
+  }catch(e){}
+  location.reload();
 };
-nextBtn.onclick=goNext;
-resetBtn.onclick=()=>{
-  currentIndex=-1;
-  booha.style.opacity=0;
-  booha.classList.remove('bobbing');
-  closeWindow();
-  gameStarted=false;
-  audioPrimed=false;
-  try{bgm.pause();}catch(e){}
-};
+
 closeModalBtn.onclick=(e)=>{
   e.stopPropagation();
   closeWindow();
